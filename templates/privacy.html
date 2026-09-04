@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Privacy Policy — Spendly{% endblock %}
+
+{% block content %}
+
+<section class="legal-section">
+    <div class="legal-container">
+
+        <div class="legal-header">
+            <h1 class="legal-title">Privacy Policy</h1>
+            <p class="legal-updated">Last updated: September 4, 2026</p>
+        </div>
+
+        <div class="legal-body">
+
+            <h2>1. Introduction</h2>
+            <p>This Privacy Policy explains how Spendly ("we", "us") collects, uses, and protects your information when you use our expense tracking service ("the Service"). By using the Service, you agree to the practices described here.</p>
+
+            <h2>2. Information We Collect</h2>
+            <p>We collect the information you provide directly, such as your name, email address, and password when you register. We also collect the financial data you choose to enter, including expense amounts, categories, dates, and descriptions.</p>
+
+            <h2>3. How We Use Your Information</h2>
+            <p>We use your information to create and maintain your account, to display your expenses and spending summaries back to you, to authenticate your logins, and to communicate with you about your account or the Service. We do not use your expense data to sell products or services to you.</p>
+
+            <h2>4. Data Storage and Security</h2>
+            <p>Your account credentials are stored using industry-standard hashing practices, and your expense data is stored in our database associated only with your account. We take reasonable technical measures to protect your information, but no method of storage or transmission is completely secure.</p>
+
+            <h2>5. Data Sharing</h2>
+            <p>We do not sell, rent, or share your personal or financial data with third parties for marketing purposes. We may share information with service providers who help us operate the Service (such as hosting providers), solely to the extent necessary to provide the Service, and only under obligations to protect your data.</p>
+
+            <h2>6. Your Choices and Rights</h2>
+            <p>You may access, edit, or delete your expense entries at any time within the Service. You may also request deletion of your account and associated data by contacting us. We will honor such requests except where retention is required by law.</p>
+
+            <h2>7. Cookies and Sessions</h2>
+            <p>We use essential cookies or session identifiers to keep you logged in and to remember your preferences. We do not use tracking cookies for advertising purposes.</p>
+
+            <h2>8. Data Retention</h2>
+            <p>We retain your account and expense data for as long as your account remains active. If you delete your account, we will remove your personal data within a reasonable period, except where retention is necessary for legal or security reasons.</p>
+
+            <h2>9. Children's Privacy</h2>
+            <p>The Service is not directed to individuals under the age of 13, and we do not knowingly collect personal information from children.</p>
+
+            <h2>10. Changes to This Policy</h2>
+            <p>We may update this Privacy Policy from time to time. Material changes will be reflected by updating the "Last updated" date above. Continued use of the Service after changes take effect constitutes acceptance of the revised policy.</p>
+
+            <h2>11. Contact Us</h2>
+            <p>If you have questions about this Privacy Policy or how your data is handled, please reach out through the contact details provided on our website. See also our <a href="{{ url_for('terms') }}">Terms and Conditions</a>.</p>
+
+        </div>
+
+    </div>
+</section>
+
+{% endblock %}
