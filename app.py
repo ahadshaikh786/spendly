@@ -1,9 +1,22 @@
 import os
+from datetime import date, datetime
+from functools import wraps
 
 from flask import Flask, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash
 
-from database.db import create_user, get_db, get_user_by_email, init_db, seed_db
+from database.db import (
+    create_user,
+    get_category_totals,
+    get_db,
+    get_expense_summary,
+    get_month_total,
+    get_recent_expenses,
+    get_user_by_email,
+    get_user_by_id,
+    init_db,
+    seed_db,
+)
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key-change-in-production")
@@ -16,6 +29,57 @@ app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key-change-in-producti
 with app.app_context():
     init_db()
     seed_db()
+
+
+# ------------------------------------------------------------------ #
+# Presentation helpers                                                #
+# ------------------------------------------------------------------ #
+
+CATEGORY_ICONS = {
+    "Food": "utensils",
+    "Transport": "bus",
+    "Bills": "zap",
+    "Health": "heart-pulse",
+    "Entertainment": "clapperboard",
+    "Shopping": "shopping-bag",
+    "Other": "ellipsis",
+}
+
+
+@app.template_filter("rupees")
+def rupees(amount):
+    whole, _, paise = "{:.2f}".format(amount).partition(".")
+    if len(whole) > 3:
+        head, tail = whole[:-3], whole[-3:]
+        groups = []
+        while len(head) > 2:
+            groups.insert(0, head[-2:])
+            head = head[:-2]
+        if head:
+            groups.insert(0, head)
+        whole = ",".join(groups) + "," + tail
+    return "₹" + whole + "." + paise
+
+
+@app.template_filter("daymonth")
+def daymonth(value):
+    when = datetime.fromisoformat(value)
+    return "{} {}".format(when.day, when.strftime("%b"))
+
+
+# ------------------------------------------------------------------ #
+# Access control                                                      #
+# ------------------------------------------------------------------ #
+
+# @wraps keeps the wrapped view's __name__, which Flask uses as the
+# endpoint — without it url_for("profile") raises BuildError.
+def login_required(view):
+    @wraps(view)
+    def wrapped_view(*args, **kwargs):
+        if not session.get("user_id"):
+            return redirect(url_for("login"))
+        return view(*args, **kwargs)
+    return wrapped_view
 
 
 # ------------------------------------------------------------------ #
@@ -76,7 +140,7 @@ def login():
         session["user_id"] = user["id"]
         session["user_name"] = user["name"]
 
-        return redirect(url_for("landing"))
+        return redirect(url_for("dashboard"))
 
     return render_template("login.html")
 
@@ -85,6 +149,44 @@ def login():
 def logout():
     session.clear()
     return redirect(url_for("landing"))
+
+
+@app.route("/dashboard")
+@login_required
+def dashboard():
+    user_id = session["user_id"]
+    today = date.today()
+
+    summary = get_expense_summary(user_id)
+    this_month = get_month_total(user_id, today.strftime("%Y-%m"))
+    categories = get_category_totals(user_id)
+    recent = get_recent_expenses(user_id, 6)
+
+    return render_template(
+        "dashboard.html",
+        summary=summary,
+        this_month=this_month,
+        categories=categories,
+        recent=recent,
+        month_label=today.strftime("%B %Y"),
+        icons=CATEGORY_ICONS,
+    )
+
+
+# @app.route must stay the outer decorator — inverted, Flask registers the
+# unguarded view and the login check silently never runs.
+@app.route("/profile")
+@login_required
+def profile():
+    user = get_user_by_id(session["user_id"])
+
+    if user is None:
+        session.clear()
+        return redirect(url_for("login"))
+
+    member_since = datetime.fromisoformat(user["created_at"]).strftime("%B %Y")
+
+    return render_template("profile.html", user=user, member_since=member_since)
 
 
 @app.route("/terms")
@@ -100,11 +202,6 @@ def privacy():
 # ------------------------------------------------------------------ #
 # Placeholder routes — students will implement these                  #
 # ------------------------------------------------------------------ #
-
-@app.route("/profile")
-def profile():
-    return "Profile page — coming in Step 4"
-
 
 @app.route("/expenses/add")
 def add_expense():
