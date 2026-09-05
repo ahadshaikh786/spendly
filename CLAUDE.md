@@ -88,11 +88,11 @@ Section headers in `app.py` and `style.css` use a fixed-width banner box:
 Match it when adding sections.
 
 ## Warnings and things to avoid
-Never use raw string returns for stub routes once a step is implemented — always render a template
-Never hardcode URLs in templates — always use url_for()
-Never put DB logic in route functions — it belongs in database/db.py
-Never install new packages mid-feature without flagging it — keep requirements.txt in sync
-Never use JS frameworks — the frontend is intentionally vanilla
-database/db.py is currently empty — do not assume helpers exist until the step that implements them
-FK enforcement is manual — SQLite foreign keys are off by default; get_db() must run PRAGMA foreign_keys = ON on every connection
-The app runs on port 5001, not the Flask default 5000 — don't change this
+- Never use raw string returns for stub routes once a step is implemented — always render a template
+- Never hardcode URLs in templates — always use url_for()
+- Never put DB logic in route functions — it belongs in database/db.py
+- Never install new packages mid-feature without flagging it — keep requirements.txt in sync
+- Never use JS frameworks — the frontend is intentionally vanilla
+- database/db.py is currently empty — do not assume helpers exist until the step that implements them
+- FK enforcement is manual — SQLite foreign keys are off by default; get_db() must run PRAGMA foreign_keys = ON on every connection
+- The app runs on port 5001, not the Flask default 5000 — don't change this
