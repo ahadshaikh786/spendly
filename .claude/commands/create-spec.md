@@ -29,21 +29,31 @@ From $ARGUMENTS extract:
    - Maximum 40 characters
    - Example: registration, login-logout
 
-
 4. `branch_name` — format: `feature/<feature_slug>`
    - Example: `feature/registration`
 
 If you cannot infer these from $ARGUMENTS, ask the user
 to clarify before proceeding.
 
+## Step 3 — Check branch name is not taken
+Run `git branch` to list existing branches.
+If `branch_name` is already taken, append a number:
+`feature/registration-01`, `feature/registration-02` etc.
 
-## Step 3 — Create and switch to the feature branch
+## Step 4 — Switch to main and pull latest
+Run:
+```
+git checkout main
+git pull origin main
+```
+
+## Step 5 — Create and switch to the feature branch
 Run:
 ```
 git checkout -b <branch_name>
 ```
 
-## Step 4 — Research the codebase
+## Step 6 — Research the codebase
 Read these files before writing the spec:
 - `CLAUDE.md` — roadmap, conventions, schema
 - `app.py` — existing routes and structure
@@ -53,7 +63,7 @@ Read these files before writing the spec:
 Check `CLAUDE.md` to confirm the requested step is not already
 marked complete. If it is, warn the user and stop.
 
-## Step 5 — Write the spec
+## Step 7 — Write the spec
 Generate a spec document with this exact structure:
 
 ---
@@ -103,10 +113,10 @@ A specific testable checklist. Each item must be
 something that can be verified by running the app.
 ---
 
-## Step 6 — Save the spec
+## Step 8 — Save the spec
 Save to: `.claude/specs/<step_number>-<feature_slug>.md`
 
-## Step 7 — Report to the user
+## Step 9 — Report to the user
 Print a short summary in this exact format:
 ```
 Branch:    <branch_name>
