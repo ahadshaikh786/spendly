@@ -608,6 +608,12 @@ a { color: inherit; text-decoration: none; }
 }
 
 /* ------------------------------------------------------------------ */
+/* Navbar (signed in)                                                  */
+/* ------------------------------------------------------------------ */
+
+.nav-user { color: var(--ink-faint); font-weight: 400; }
+
+/* ------------------------------------------------------------------ */
 /* Responsive                                                          */
 /* ------------------------------------------------------------------ */
 
@@ -620,5 +626,7 @@ a { color: inherit; text-decoration: none; }
 
 @media (max-width: 600px) {
     .nav-links a:not(.nav-cta) { display: none; }
+    .nav-user { display: none; }
+    .nav-links a.nav-signout { display: inline-block; }
     .hero { padding: 3rem 1rem 2rem; }
 }
