@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+
+{% block title %}Dashboard — Spendly{% endblock %}
+
+{% block content %}
+
+<section class="dash-section">
+    <div class="dash-container">
+
+        <div class="dash-header">
+            <h1 class="dash-title">Dashboard</h1>
+            <p class="dash-subtitle">Where your money went, {{ session.user_name.split()[0] }}.</p>
+        </div>
+
+        {% if summary.count == 0 %}
+
+        <div class="dash-empty">
+            <div class="dash-empty-icon">{{ icon("inbox") }}</div>
+            <h2 class="dash-empty-title">Nothing tracked yet</h2>
+            <p class="dash-empty-copy">
+                Once you start recording expenses, this page will show your monthly
+                total, a breakdown by category, and your most recent entries.
+            </p>
+        </div>
+
+        {% else %}
+
+        <div class="dash-stats">
+
+            <div class="dash-stat">
+                <div class="dash-stat-head">
+                    <span class="dash-stat-icon">{{ icon("wallet") }}</span>
+                    <span class="dash-stat-label">{{ month_label }}</span>
+                </div>
+                <p class="dash-stat-value">{{ this_month.total | rupees }}</p>
+                <p class="dash-stat-note">{{ this_month.count }} expense{{ '' if this_month.count == 1 else 's' }} this month</p>
+            </div>
+
+            <div class="dash-stat">
+                <div class="dash-stat-head">
+                    <span class="dash-stat-icon">{{ icon("receipt") }}</span>
+                    <span class="dash-stat-label">All time</span>
+                </div>
+                <p class="dash-stat-value">{{ summary.total | rupees }}</p>
+                <p class="dash-stat-note">{{ summary.count }} expense{{ '' if summary.count == 1 else 's' }} tracked</p>
+            </div>
+
+            <div class="dash-stat">
+                <div class="dash-stat-head">
+                    <span class="dash-stat-icon">{{ icon("trending-up") }}</span>
+                    <span class="dash-stat-label">Top category</span>
+                </div>
+                <p class="dash-stat-value">{{ categories[0].total | rupees }}</p>
+                <p class="dash-stat-note">{{ categories[0].category }} &middot; {{ categories[0].count }} entr{{ 'y' if categories[0].count == 1 else 'ies' }}</p>
+            </div>
+
+        </div>
+
+        <div class="dash-panels">
+
+            <div class="dash-panel">
+                <h2 class="dash-panel-title">By category</h2>
+
+                <div class="dash-cats">
+                    {% for cat in categories %}
+                    <div class="dash-cat">
+                        <span class="dash-cat-icon">{{ icon(icons[cat.category]) }}</span>
+                        <span class="dash-cat-name">{{ cat.category }}</span>
+                        <span class="dash-cat-amount">{{ cat.total | rupees }}</span>
+                        <div class="dash-cat-track">
+                            <div class="dash-cat-fill" style="width: {{ (cat.total / categories[0].total * 100) | round(1) }}%"></div>
+                        </div>
+                        <span class="dash-cat-count">{{ cat.count }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="dash-panel">
+                <h2 class="dash-panel-title">Recent</h2>
+
+                <div class="dash-rows">
+                    {% for e in recent %}
+                    <div class="dash-row">
+                        <span class="dash-row-icon">{{ icon(icons[e.category]) }}</span>
+                        <span class="dash-row-main">
+                            <span class="dash-row-desc">{{ e.description or e.category }}</span>
+                            <span class="dash-row-meta">{{ e.date | daymonth }} &middot; {{ e.category }}</span>
+                        </span>
+                        <span class="dash-row-amount">{{ e.amount | rupees }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+
+        {% endif %}
+
+    </div>
+</section>
+
+{% endblock %}

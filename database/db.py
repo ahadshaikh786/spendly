@@ -131,3 +131,69 @@ def get_user_by_email(email):
         ).fetchone()
     finally:
         conn.close()
+
+
+def get_user_by_id(user_id):
+    conn = get_db()
+    try:
+        # Explicit columns, not SELECT * — this row is rendered into a
+        # template, so password_hash must not be in it at all.
+        return conn.execute(
+            "SELECT id, name, email, created_at FROM users WHERE id = ?", (user_id,)
+        ).fetchone()
+    finally:
+        conn.close()
+
+
+# ------------------------------------------------------------------ #
+# Expenses                                                            #
+# ------------------------------------------------------------------ #
+
+def get_expense_summary(user_id):
+    conn = get_db()
+    try:
+        return conn.execute(
+            "SELECT COUNT(*) AS count, COALESCE(SUM(amount), 0) AS total,"
+            " MIN(date) AS first_date, MAX(date) AS last_date"
+            " FROM expenses WHERE user_id = ?",
+            (user_id,),
+        ).fetchone()
+    finally:
+        conn.close()
+
+
+def get_month_total(user_id, month):
+    conn = get_db()
+    try:
+        return conn.execute(
+            "SELECT COUNT(*) AS count, COALESCE(SUM(amount), 0) AS total"
+            " FROM expenses WHERE user_id = ? AND substr(date, 1, 7) = ?",
+            (user_id, month),
+        ).fetchone()
+    finally:
+        conn.close()
+
+
+def get_category_totals(user_id):
+    conn = get_db()
+    try:
+        return conn.execute(
+            "SELECT category, COUNT(*) AS count, SUM(amount) AS total"
+            " FROM expenses WHERE user_id = ?"
+            " GROUP BY category ORDER BY total DESC",
+            (user_id,),
+        ).fetchall()
+    finally:
+        conn.close()
+
+
+def get_recent_expenses(user_id, limit):
+    conn = get_db()
+    try:
+        return conn.execute(
+            "SELECT id, amount, category, date, description FROM expenses"
+            " WHERE user_id = ? ORDER BY date DESC, id DESC LIMIT ?",
+            (user_id, limit),
+        ).fetchall()
+    finally:
+        conn.close()
