@@ -4,12 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-"Spendly" — a Flask expense tracker built as a **teaching scaffold**. The UI (landing, auth, legal pages, full CSS design system) is finished; the application logic is deliberately stubbed out and implemented step by step. `app.py` marks the unbuilt routes under a `Placeholder routes — students will implement these` header, each returning a string naming its step (Step 3 logout, Step 4 profile, Steps 7–9 expense CRUD). `database/db.py` and `static/js/main.js` are comment-only placeholders.
+"Spendly" — a Flask expense tracker built as a **teaching scaffold**. The UI (landing, auth, legal pages, full CSS design system) is finished; the application logic is deliberately stubbed out and implemented step by step. Steps 1–4 are built (database layer, registration, login/logout, profile), plus a dashboard at `/dashboard`. `app.py` marks the remaining unbuilt routes under a `Placeholder routes — students will implement these` header, each returning a string naming its step (Steps 7–9 expense CRUD). `static/js/main.js` is still a comment-only placeholder.
 
 Consequences when working here:
-- Templates are ahead of the backend. `register.html` and `login.html` POST to routes that currently accept GET only; adding `methods=["GET", "POST"]` plus handling is the intended implementation, not a bug fix elsewhere.
+- Templates can run ahead of the backend. When a template POSTs to a route still registered GET-only, adding `methods=["GET", "POST"]` plus handling is the intended implementation, not a bug fix elsewhere.
 - Don't implement future steps unprompted. If asked for Step N, leave the later placeholders alone.
-- `database/db.py` has a contract spelled out in its comments: `get_db()` (SQLite connection with `row_factory` and foreign keys enabled), `init_db()` (`CREATE TABLE IF NOT EXISTS`), `seed_db()` (dev sample data). Follow it.
+- `database/db.py` follows the contract spelled out in its comments: `get_db()` (SQLite connection with `row_factory` and foreign keys enabled), `init_db()` (`CREATE TABLE IF NOT EXISTS`), `seed_db()` (dev sample data). It now also holds the user lookups and the read-only expense aggregates the dashboard uses. Steps 7–9 add the write helpers there.
 
 ## Architecture
 
@@ -19,17 +19,19 @@ Flask monolith, no blueprints, no ORM, no build step for frontend assets.
 app.py                  # single module: Flask app + all routes
 database/
   __init__.py           # empty, makes database a package
-  db.py                  # get_db() / init_db() / seed_db() contract (Step 1, unimplemented)
+  db.py                  # get_db() / init_db() / seed_db() + user and expense query helpers
 templates/               # Jinja2, all extend base.html
-  base.html              # navbar, footer, blocks: title / head / content / scripts
+  base.html              # navbar (session-aware), footer, blocks: title / head / content / scripts
+  _icons.html            # icon() macro, imported where inline SVG icons are needed
   landing.html, login.html, register.html, terms.html, privacy.html
+  dashboard.html, profile.html
 static/
   css/style.css          # one hand-written stylesheet, :root custom properties for theming
   js/main.js             # placeholder, comment-only until a later step
 expense_tracker.db       # gitignored SQLite file, created at runtime by init_db()/seed_db()
 ```
 
-Request flow: browser → Flask route in `app.py` → `render_template()` with a Jinja template from `templates/` (extending `base.html`) → route handlers that need data will call into `database/db.py`'s `get_db()` once it's implemented. There's no service/model layer — routes talk to SQLite directly via `sqlite3` (per the `db.py` contract), and templates receive plain dicts/rows via `render_template(..., **context)`.
+Request flow: browser → Flask route in `app.py` → `render_template()` with a Jinja template from `templates/` (extending `base.html`) → route handlers that need data call into the helpers in `database/db.py`. There's no service/model layer — routes talk to SQLite directly via `sqlite3` (per the `db.py` contract), and templates receive plain dicts/rows via `render_template(..., **context)`.
 
 No JS framework, no CSS framework, no bundler — `static/js/main.js` and `static/css/style.css` are served as-is via Flask's static handler and linked from `base.html` with `url_for('static', filename=...)`.
 
@@ -52,10 +54,11 @@ Port 5001, not 5000 (macOS AirPlay conflicts with 5000). The SQLite file `expens
 
 - `app.py` — single module, all routes. No blueprints; keep it that way unless the step calls for it.
 - `templates/base.html` — every page extends it. Provides the navbar, footer, `{% block title %}`, `content`, `head`, `scripts`. Use `url_for('route_name')` for internal links, never hardcoded paths.
-- `static/css/style.css` — one hand-written stylesheet, no build step, no framework. Organized into banner-commented sections (Variables, Reset, Navbar, Hero, Mock window, Buttons, Features, CTA, Auth pages, Legal pages, Footer, Responsive). Add new styles in a new banner section at the end, before Responsive.
+- `static/css/style.css` — one hand-written stylesheet, no build step, no framework. Organized into banner-commented sections (Variables, Reset, Navbar, Main, Hero, Mock window, Buttons, Features, CTA, Auth pages, Legal pages, Footer, Navbar (signed in), Profile page, Dashboard, Responsive). Add new styles in a new banner section at the end, before Responsive.
 - **All colors, fonts, radii, and widths come from `:root` custom properties** (`--ink*`, `--paper*`, `--accent*`, `--danger*`, `--border*`, `--font-display`/`--font-body`, `--radius-*`). Never introduce a raw hex value in a rule; add a variable if a new one is genuinely needed.
 - Design language: warm off-white paper (`--paper`), near-black ink, deep green accent (`#1a472a`), DM Serif Display for headings and DM Sans for body (loaded from Google Fonts in `base.html`).
 - Error display convention: templates render `{% if error %}<div class="auth-error">{{ error }}</div>{% endif %}`, so route handlers pass `error=` into `render_template` rather than using flash messages.
+- Signed-in pages use the `login_required` decorator in `app.py`, placed *under* `@app.route`. Amounts and dates render through the `rupees` and `daymonth` template filters, and category icons come from the `CATEGORY_ICONS` map passed in as `icons=`.
 - `.bak` files (`style.css.bak`, `landing.html.bak`) are pre-redesign snapshots kept intentionally. Don't edit or delete them, and don't treat them as live code.
 
 ## Code style
@@ -93,6 +96,6 @@ Match it when adding sections.
 - Never put DB logic in route functions — it belongs in database/db.py
 - Never install new packages mid-feature without flagging it — keep requirements.txt in sync
 - Never use JS frameworks — the frontend is intentionally vanilla
-- database/db.py is currently empty — do not assume helpers exist until the step that implements them
+- Don't assume a db.py helper exists — read the file first; the write helpers for expenses aren't there yet
 - FK enforcement is manual — SQLite foreign keys are off by default; get_db() must run PRAGMA foreign_keys = ON on every connection
 - The app runs on port 5001, not the Flask default 5000 — don't change this
